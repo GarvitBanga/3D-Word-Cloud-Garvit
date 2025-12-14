@@ -77,7 +77,7 @@ def perform_topic_modeling(text: str, n_topics=5, n_words=10):
         c = Counter([w for w in words if w.isalpha() and w not in STOPWORDS and len(w) > 2])
         return [{"word": w, "weight": count} for w, count in c.most_common(n_topics * n_words)]
 
-    tf_vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words=list(STOPWORDS))
+    tf_vectorizer = CountVectorizer(max_df=0.95, min_df=1, stop_words=list(STOPWORDS))
     try:
         tf = tf_vectorizer.fit_transform(sentences)
     except ValueError:
