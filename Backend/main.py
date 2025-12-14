@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -9,6 +10,7 @@ import numpy as np
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
+from fastapi.middleware.cors import CORSMiddleware
 
 # Download necessary NLTK data
 try:
@@ -20,6 +22,18 @@ except LookupError:
     nltk.download('stopwords')
 
 app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class AnalyzeRequest(BaseModel):
+    url: str
 
 def get_stopwords():
     try:
@@ -38,17 +52,10 @@ def extract_text(url: str):
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Remove script and style elements
         for script in soup(["script", "style", "nav", "footer", "header", "aside", "noscript"]):
             script.decompose()
-            
-        # Get text
         text = " ".join([p.get_text() for p in soup.find_all('p')])
-        
-        # Simple cleanup
         text = re.sub(r'\s+', ' ', text).strip()
-        
         return text
     except requests.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch document: {str(e)}")
