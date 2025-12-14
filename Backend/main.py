@@ -2,8 +2,35 @@ from fastapi import FastAPI, HTTPException
 import requests
 from bs4 import BeautifulSoup
 import re
+from collections import Counter
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+import numpy as np
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize, word_tokenize
+
+# Download necessary NLTK data
+try:
+    nltk.data.find('tokenizers/punkt')
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('punkt')
+    nltk.download('punkt_tab')
+    nltk.download('stopwords')
 
 app = FastAPI()
+
+def get_stopwords():
+    try:
+        return set(stopwords.words('english')).union({
+            'said', 'says', 'would', 'could', 'also', 'mr', 'ms', 'mrs', 'one', 'two', 'new', 'year', 'years', 'time', 'people'
+        })
+    except LookupError:
+        nltk.download('stopwords')
+        return set(stopwords.words('english'))
+
+STOPWORDS = get_stopwords()
 
 def extract_text(url: str):
     try:
